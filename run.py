@@ -1,7 +1,7 @@
 from app import Scrapper
 
 if __name__ == "__main__":
-	URL = "https://en.wikiquote.zip"
+	URL = "https://en.wikiquote.org/wiki/Main_Page"
 	scp = Scrapper(URL)
-	r = scp.get_base_response()
-	print(r.text)
+	print(scp.get_todays_quote_of_the_day())
+	print(scp.get_todays_quote_author())
