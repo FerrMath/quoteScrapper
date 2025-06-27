@@ -1,4 +1,4 @@
-from ..app import Scrapper
+from app import Scrapper
 from bs4 import BeautifulSoup
 
 class TestScrapper:
