@@ -1,23 +1,33 @@
 import requests
 from .exceptions import InvalidUrlError
 from bs4 import BeautifulSoup
+from .model import Quote
+from typing import List
+from calendar import month_name
 
 class Scrapper:
-	soup: BeautifulSoup
+	todays_soup: BeautifulSoup
+	all_quotes_soup: BeautifulSoup
+	todays_url: str|None = None
+	all_quotes_url: str
 
 	def __init__(self, url=None) -> None:
-		if not (url is None):			
+		self.all_quotes_url = "https://en.wikiquote.org/wiki/Wikiquote:Quote_of_the_day/" # Must add the month like .../january
+		
+		if url is not None:			
 			clean = ""
 			clean = self._clean_url(url)
 			if clean is None:
 				raise InvalidUrlError(f"Invalid URL: {url}")
 			else:
 				self.url = clean
-				self._set_soup(clean)
+				self.todays_soup = self._set_soup(self.url)
+		else:
+			self.todays_url = "https://en.wikiquote.org/wiki/Main_Page"
+			self.todays_soup = self._set_soup(self.todays_url)
 
-	def get_todays_quote_of_the_day(self):
-		# data = self.soup.select_one("#mf-qotd>div>div td:first-child")
-		data = self.soup.select_one("#mf-qotd")
+	def get_todays_quote_of_the_day(self) -> str|None:
+		data = self.todays_soup.select_one("#mf-qotd")
 		quote = ""
 		if data is None:
 			return
@@ -29,8 +39,29 @@ class Scrapper:
 					break
 		return quote
 	
-	def get_todays_quote_author(self):
-		data = self.soup.select_one("#mf-qotd")
+	def get_all_quotes(self) -> list[Quote]:
+		#TODO WIP
+		quotes: List[Quote] = []
+		for i in range(1, 13):
+			month = month_name[i].title()
+			url = self.all_quotes_url + f"{month}"
+			soup = self._set_soup(url)
+			data = soup.select_one("#mw-content-text")
+			data = data.select(".mw-content-ltr > dl")
+			if not data:
+				print(f"No quotes found for {month}")
+				continue
+
+			#TODO Clean the data to have only quote blocks WIP
+			if data[0].text.strip().startswith("See also"):
+				data.pop(0)
+			
+			print(*data, sep="\n\n\n")
+			return quotes
+		return quotes
+
+	def get_todays_quote_author(self) -> str:
+		data = self.todays_soup.select_one("#mf-qotd")
 		if data is None:
 			raise ValueError("Author not found")
 		for td in data.find_all("td"):
@@ -42,7 +73,7 @@ class Scrapper:
 			
 	def _clean_url(self, url:str) -> str|None:
 		formated = url.strip()
-		if self._is_unsafe_url(url):
+		if self.is_unsafe_url(url):
 			raise SystemExit("Dangerous URL detected. Aborting")
 		if not url.startswith("http"):
 			formated = url.split("//", 1)[-1]
@@ -67,8 +98,7 @@ class Scrapper:
 	def _set_soup(self, url):
 		response = requests.get(url)
 		soup = BeautifulSoup(response.text, 'html.parser')
-		self.soup = soup
-
+		return soup
 
 	def get_base_response(self):
 		headers = {
@@ -88,7 +118,7 @@ class Scrapper:
 			raise
 
 	@staticmethod
-	def _is_unsafe_url(url):
+	def is_unsafe_url(url):
 		dang_extensions = ['.exe', '.zip', '.rar', '.msi', '.bat', '.dll', "ps2"]
 		if any(
 			url.lower().endswith(ext) for ext in dang_extensions

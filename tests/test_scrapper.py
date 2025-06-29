@@ -51,16 +51,16 @@ class TestScrapper:
 			"www.google.exe",
 		]
 		for test in urls:
-			assert Scrapper._is_unsafe_url(test) == True
+			assert Scrapper.is_unsafe_url(test) == True
 	
 	def test_successfully_gets_the_author_of_the_quote_of_the_day(self):
 		scp = Scrapper()
-		scp.soup = BeautifulSoup(self.mock_html, "html.parser")
+		scp.todays_soup = BeautifulSoup(self.mock_html, "html.parser")
 		author = scp.get_todays_quote_author()
 		assert author == "Winston Churchill"
 
 	def test_successfully_gets_the_quote_of_the_day(self):
 		scp = Scrapper()
-		scp.soup = BeautifulSoup(self.mock_html, "html.parser")
+		scp.todays_soup = BeautifulSoup(self.mock_html, "html.parser")
 		quote = scp.get_todays_quote_of_the_day()
 		assert quote == '"Success is not final, failure is not fatal: it is the courage to continue that counts."'
